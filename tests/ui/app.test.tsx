@@ -46,6 +46,20 @@ describe('Flow Cost window', () => {
     expect(screen.getByText('2. Submit')).toBeInTheDocument();
   });
 
+  it('shows the structure of the flow', async () => {
+    const user = userEvent.setup();
+    const app = renderApp();
+    loadGraph(app);
+    await user.selectOptions(screen.getByLabelText('Goal'), 'done');
+    expect(
+      screen.getByRole('heading', { name: 'Flow structure' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Independent routes').nextSibling,
+    ).toHaveTextContent('2');
+    expect(screen.getByText('Decision points')).toBeInTheDocument();
+  });
+
   it('says so when no path exists', async () => {
     const user = userEvent.setup();
     const app = renderApp();

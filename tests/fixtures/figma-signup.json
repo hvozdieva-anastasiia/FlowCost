@@ -1,0 +1,227 @@
+{
+  "pageName": "Page 1",
+  "screens": [
+    {
+      "id": "1:2",
+      "name": "Splash",
+      "width": 390,
+      "height": 844,
+      "contentHeight": 844,
+      "scrolls": false,
+      "ending": false,
+      "fields": []
+    },
+    {
+      "id": "1:3",
+      "name": "Welcome",
+      "width": 390,
+      "height": 844,
+      "contentHeight": 844,
+      "scrolls": false,
+      "ending": false,
+      "fields": []
+    },
+    {
+      "id": "1:4",
+      "name": "Form",
+      "width": 390,
+      "height": 844,
+      "contentHeight": 844,
+      "scrolls": false,
+      "ending": false,
+      "fields": [
+        {
+          "id": "1:20",
+          "name": "Email input",
+          "bounds": { "x": 35, "y": 160, "width": 320, "height": 48 },
+          "chars": 12
+        },
+        {
+          "id": "1:22",
+          "name": "Password input",
+          "bounds": { "x": 35, "y": 230, "width": 320, "height": 48 },
+          "chars": 12
+        }
+      ]
+    },
+    {
+      "id": "1:5",
+      "name": "Menu",
+      "width": 300,
+      "height": 300,
+      "contentHeight": 300,
+      "scrolls": false,
+      "ending": false,
+      "fields": []
+    },
+    {
+      "id": "1:6",
+      "name": "Help",
+      "width": 390,
+      "height": 844,
+      "contentHeight": 844,
+      "scrolls": false,
+      "ending": false,
+      "fields": []
+    },
+    {
+      "id": "1:7",
+      "name": "Done",
+      "width": 390,
+      "height": 844,
+      "contentHeight": 844,
+      "scrolls": false,
+      "ending": false,
+      "fields": []
+    },
+    {
+      "id": "1:8",
+      "name": "Feed",
+      "width": 390,
+      "height": 844,
+      "contentHeight": 1600,
+      "scrolls": true,
+      "ending": false,
+      "fields": []
+    },
+    {
+      "id": "1:9",
+      "name": "Island",
+      "width": 390,
+      "height": 844,
+      "contentHeight": 844,
+      "scrolls": false,
+      "ending": false,
+      "fields": []
+    }
+  ],
+  "links": [
+    {
+      "id": "1:2#1",
+      "screenId": "1:2",
+      "sourceId": "1:2",
+      "sourceName": "Splash (screen)",
+      "bounds": { "x": 0, "y": 0, "width": 390, "height": 844 },
+      "trigger": "TIMEOUT",
+      "delaySeconds": 2,
+      "navigation": "NAVIGATE",
+      "targetId": "1:3",
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0
+    },
+    {
+      "id": "1:11#1",
+      "screenId": "1:3",
+      "sourceId": "1:11",
+      "sourceName": "Get started",
+      "bounds": { "x": 35, "y": 700, "width": 320, "height": 56 },
+      "trigger": "CLICK",
+      "delaySeconds": 0,
+      "navigation": "NAVIGATE",
+      "targetId": "1:4",
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0.3
+    },
+    {
+      "id": "1:13#1",
+      "screenId": "1:3",
+      "sourceId": "1:13",
+      "sourceName": "Skip",
+      "bounds": { "x": 150, "y": 780, "width": 90, "height": 24 },
+      "trigger": "CLICK",
+      "delaySeconds": 0,
+      "navigation": "NAVIGATE",
+      "targetId": "1:7",
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0
+    },
+    {
+      "id": "1:24#1",
+      "screenId": "1:4",
+      "sourceId": "1:24",
+      "sourceName": "Submit",
+      "bounds": { "x": 35, "y": 700, "width": 320, "height": 56 },
+      "trigger": "CLICK",
+      "delaySeconds": 0,
+      "navigation": "NAVIGATE",
+      "targetId": "1:7",
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0
+    },
+    {
+      "id": "1:26#1",
+      "screenId": "1:4",
+      "sourceId": "1:26",
+      "sourceName": "Menu",
+      "bounds": { "x": 300, "y": 20, "width": 60, "height": 36 },
+      "trigger": "CLICK",
+      "delaySeconds": 0,
+      "navigation": "OVERLAY",
+      "targetId": "1:5",
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0
+    },
+    {
+      "id": "1:30#1",
+      "screenId": "1:5",
+      "sourceId": "1:30",
+      "sourceName": "Close",
+      "bounds": { "x": 20, "y": 20, "width": 80, "height": 40 },
+      "trigger": "CLICK",
+      "delaySeconds": 0,
+      "navigation": "CLOSE",
+      "targetId": null,
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0
+    },
+    {
+      "id": "1:32#1",
+      "screenId": "1:5",
+      "sourceId": "1:32",
+      "sourceName": "Help",
+      "bounds": { "x": 20, "y": 100, "width": 120, "height": 40 },
+      "trigger": "CLICK",
+      "delaySeconds": 0,
+      "navigation": "SWAP",
+      "targetId": "1:6",
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0
+    },
+    {
+      "id": "1:36#1",
+      "screenId": "1:8",
+      "sourceId": "1:36",
+      "sourceName": "Load more",
+      "bounds": { "x": 35, "y": 1300, "width": 320, "height": 56 },
+      "trigger": "CLICK",
+      "delaySeconds": 0,
+      "navigation": "NAVIGATE",
+      "targetId": "1:7",
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0
+    },
+    {
+      "id": "1:41#1",
+      "screenId": "1:9",
+      "sourceId": "1:41",
+      "sourceName": "Leave",
+      "bounds": { "x": 35, "y": 700, "width": 320, "height": 56 },
+      "trigger": "CLICK",
+      "delaySeconds": 0,
+      "navigation": "NAVIGATE",
+      "targetId": "1:4",
+      "broken": null,
+      "conditional": false,
+      "transitionSeconds": 0
+    }
+  ],
+  "starts": [{ "id": "1:3", "name": "Sign up" }]
+}

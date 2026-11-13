@@ -4,7 +4,7 @@ import { copyText } from '../clipboard';
 import { useFlow } from '../FlowProvider';
 
 export function ExportButtons() {
-  const { state, chosen } = useFlow();
+  const { state, chosen, analysis } = useFlow();
   const [status, setStatus] = useState('');
   const [fallback, setFallback] = useState('');
 
@@ -22,6 +22,7 @@ export function ExportButtons() {
             goalName: nameOf(state.goalId),
             path: chosen,
             assumptions: state.settings.assumptions,
+            flow: analysis?.flow ?? null,
           })
         : toCsv(chosen);
     const done = await copyText(text);

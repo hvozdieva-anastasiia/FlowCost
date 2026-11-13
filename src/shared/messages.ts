@@ -118,14 +118,25 @@ export function parseSnapshot(value: unknown): Snapshot | null {
   ) {
     return null;
   }
-  const { actions, screens, seconds, taps, typedChars, friction } = summary;
+  const {
+    actions,
+    screens,
+    seconds,
+    taps,
+    typedChars,
+    friction,
+    decisionPoints,
+    noReturn,
+  } = summary;
   if (
     !finite(actions) ||
     !finite(screens) ||
     !finite(seconds) ||
     !finite(taps) ||
     !finite(typedChars) ||
-    !finite(friction)
+    !finite(friction) ||
+    !finite(decisionPoints) ||
+    !finite(noReturn)
   ) {
     return null;
   }
@@ -135,7 +146,16 @@ export function parseSnapshot(value: unknown): Snapshot | null {
     createdAt,
     startName,
     goalName,
-    summary: { actions, screens, seconds, taps, typedChars, friction },
+    summary: {
+      actions,
+      screens,
+      seconds,
+      taps,
+      typedChars,
+      friction,
+      decisionPoints,
+      noReturn,
+    },
   };
 }
 
@@ -175,6 +195,10 @@ export function sanitizeAssumptions(value: unknown): Assumptions {
     fittsB: number('fittsB', 0, 5),
     minTarget: number('minTarget', 1, 200),
     farIndex: number('farIndex', 1, 20),
+    useHick:
+      typeof source.useHick === 'boolean' ? source.useHick : base.useHick,
+    hickB: number('hickB', 0, 5),
+    manyChoices: number('manyChoices', 2, 50),
   };
 }
 

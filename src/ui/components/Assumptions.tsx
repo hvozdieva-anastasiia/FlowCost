@@ -19,7 +19,9 @@ type NumericKey =
   | 'fittsA'
   | 'fittsB'
   | 'minTarget'
-  | 'farIndex';
+  | 'farIndex'
+  | 'hickB'
+  | 'manyChoices';
 
 const NUMERIC_FIELDS: readonly {
   key: NumericKey;
@@ -36,6 +38,8 @@ const NUMERIC_FIELDS: readonly {
   { key: 'drag', label: 'Drag', unit: 's', step: 0.1 },
   { key: 'fittsA', label: "Fitts's a", unit: 's', step: 0.01 },
   { key: 'fittsB', label: "Fitts's b", unit: 's/bit', step: 0.01 },
+  { key: 'hickB', label: "Hick's b", unit: 's/bit', step: 0.01 },
+  { key: 'manyChoices', label: 'Many options from', unit: 'options', step: 1 },
   { key: 'minTarget', label: 'Smallest target', unit: 'px', step: 1 },
   { key: 'farIndex', label: 'Far target above', unit: 'bits', step: 0.1 },
 ];
@@ -56,6 +60,7 @@ export function AssumptionsPanel() {
     apply({
       ...defaultAssumptions(skill, device),
       useFitts: assumptions.useFitts,
+      useHick: assumptions.useHick,
     });
 
   return (
@@ -97,6 +102,16 @@ export function AssumptionsPanel() {
           }
         />
         Point with Fitts&apos;s law
+      </label>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={assumptions.useHick}
+          onChange={(event) =>
+            apply({ ...assumptions, useHick: event.target.checked })
+          }
+        />
+        Add choice time by Hick&apos;s law
       </label>
       <p className="hint">
         These numbers are working assumptions. The model estimates a person who

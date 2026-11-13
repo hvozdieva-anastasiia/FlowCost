@@ -90,6 +90,11 @@ export interface GraphIndex {
   readonly linksByScreen: ReadonlyMap<string, readonly Link[]>;
   /** Screens that some link opens as an overlay. */
   readonly overlays: ReadonlySet<string>;
+  /**
+   * How many things on a screen the person can choose between: layers that
+   * react to the person, not counting timers.
+   */
+  readonly choices: ReadonlyMap<string, number>;
 }
 
 export function indexGraph(graph: FlowGraph): GraphIndex {
@@ -97,6 +102,7 @@ export function indexGraph(graph: FlowGraph): GraphIndex {
   for (const screen of graph.screens) screens.set(screen.id, screen);
   const linksByScreen = new Map<string, Link[]>();
   const overlays = new Set<string>();
+  const choiceSources = new Map<string, Set<string>>();
   for (const link of graph.links) {
     const list = linksByScreen.get(link.screenId);
     if (list) list.push(link);
@@ -104,8 +110,15 @@ export function indexGraph(graph: FlowGraph): GraphIndex {
     if (link.navigation === 'OVERLAY' && link.targetId !== null) {
       overlays.add(link.targetId);
     }
+    if (link.trigger !== 'TIMEOUT') {
+      const sources = choiceSources.get(link.screenId);
+      if (sources) sources.add(link.sourceId);
+      else choiceSources.set(link.screenId, new Set([link.sourceId]));
+    }
   }
-  return { graph, screens, linksByScreen, overlays };
+  const choices = new Map<string, number>();
+  for (const [id, sources] of choiceSources) choices.set(id, sources.size);
+  return { graph, screens, linksByScreen, overlays, choices };
 }
 
 /** A link that moves the person to another screen state. */

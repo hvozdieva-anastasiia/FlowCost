@@ -34,6 +34,11 @@ export interface Assumptions {
   readonly minTarget: number;
   /** Index of difficulty, in bits, above which a target counts as far. */
   readonly farIndex: number;
+  readonly useHick: boolean;
+  /** Hick's law slope: seconds per bit of choice among the options. */
+  readonly hickB: number;
+  /** A screen with this many options or more is flagged. */
+  readonly manyChoices: number;
 }
 
 const SKILL_MENTAL: Record<Skill, number> = {
@@ -69,10 +74,14 @@ export function defaultAssumptions(
     fittsB: touch ? 0.12 : 0.15,
     minTarget: touch ? 44 : 24,
     farIndex: 4.5,
+    useHick: true,
+    hickB: 0.15,
+    manyChoices: 7,
   };
 }
 
-export type OperatorKind = 'M' | 'P' | 'B' | 'H' | 'K' | 'S' | 'D' | 'R';
+/** M, P, B, H, K, S, D, R as in the KLM; C is the choice among options (Hick). */
+export type OperatorKind = 'M' | 'P' | 'B' | 'H' | 'K' | 'S' | 'D' | 'R' | 'C';
 
 export interface Operator {
   readonly kind: OperatorKind;
@@ -108,6 +117,19 @@ export function pointingSeconds(
   const distance = Math.hypot(to.x - from.x, to.y - from.y);
   const id = indexOfDifficulty(distance, target);
   return assumptions.fittsA + assumptions.fittsB * id;
+}
+
+/**
+ * Time to choose among `options` equally likely options: `b * log2(options)`.
+ * One option means no choice and costs nothing; the mental step already covers
+ * finding the control.
+ */
+export function choiceSeconds(
+  assumptions: Assumptions,
+  options: number,
+): number {
+  if (options <= 1) return 0;
+  return assumptions.hickB * Math.log2(options);
 }
 
 /** How many scrolls the person needs to bring the target into view. */
@@ -148,6 +170,8 @@ export function stepCost(
   screen: Screen,
   link: Link,
   pointer: Point,
+  /** How many options the screen offers; one means there is no choice. */
+  choices = 1,
 ): StepCost {
   const operators: Operator[] = [];
   let at = pointer;
@@ -224,6 +248,13 @@ export function stepCost(
     seconds: assumptions.mental,
     label: `Find "${link.sourceName}"`,
   });
+  if (assumptions.useHick && choices > 1) {
+    operators.push({
+      kind: 'C',
+      seconds: choiceSeconds(assumptions, choices),
+      label: `Choose among ${choices} options`,
+    });
+  }
   const linkFrom = at;
 
   if (link.trigger === 'KEY') {

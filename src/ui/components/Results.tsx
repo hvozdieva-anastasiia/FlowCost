@@ -24,6 +24,37 @@ function Summary({ path }: { path: PathResult }) {
   );
 }
 
+function Structure({ path }: { path: PathResult }) {
+  const { analysis } = useFlow();
+  const flow = analysis?.flow ?? null;
+  const items: [string, string][] = [
+    [SUMMARY_LABELS.decisionPoints, String(path.decisionPoints)],
+    [SUMMARY_LABELS.noReturn, String(path.noReturn)],
+    [
+      'Longest way back',
+      path.longestReturn === 0 ? 'none' : `${path.longestReturn} actions`,
+    ],
+  ];
+  if (flow) {
+    items.push(
+      ['Screens in play', String(flow.screens)],
+      ['Links between them', String(flow.links)],
+      ['Screens with a fork', String(flow.decisionScreens)],
+      ['Independent routes', String(flow.cyclomatic)],
+    );
+  }
+  return (
+    <dl className="facts">
+      {items.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function PathChoice() {
   const { state, dispatch, analysis } = useFlow();
   const id = useId();
@@ -208,6 +239,8 @@ export function Results() {
       <Steps path={chosen} />
       <h2>Friction</h2>
       <Friction path={chosen} />
+      <h2>Flow structure</h2>
+      <Structure path={chosen} />
     </section>
   );
 }

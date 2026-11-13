@@ -183,6 +183,11 @@ textarea {
   margin: 6px 0;
 }
 
+.row > button {
+  flex: none;
+  white-space: nowrap;
+}
+
 .row > select,
 .row > input {
   flex: 1 1 auto;
@@ -265,6 +270,27 @@ textarea {
   margin: 2px 0 0;
   font-size: 18px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.facts {
+  margin: 0;
+}
+
+.facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.facts dt {
+  color: var(--text-secondary);
+}
+
+.facts dd {
+  margin: 0;
   font-variant-numeric: tabular-nums;
 }
 

@@ -24,6 +24,8 @@ export const SUMMARY_LABELS: Record<SummaryKey, string> = {
   taps: 'Taps',
   typedChars: 'Typed characters',
   friction: 'Friction points',
+  decisionPoints: 'Decision points',
+  noReturn: 'Steps with no way back',
 };
 
 export const FRICTION_LABELS: Record<FrictionKind, string> = {
@@ -33,4 +35,5 @@ export const FRICTION_LABELS: Record<FrictionKind, string> = {
   scroll: 'Scroll',
   form: 'Long form',
   wait: 'Wait',
+  'many-choices': 'Many options',
 };

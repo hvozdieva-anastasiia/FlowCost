@@ -9,6 +9,8 @@ export interface Summary {
   readonly taps: number;
   readonly typedChars: number;
   readonly friction: number;
+  readonly decisionPoints: number;
+  readonly noReturn: number;
 }
 
 export function summarize(path: PathResult): Summary {
@@ -19,6 +21,8 @@ export function summarize(path: PathResult): Summary {
     taps: path.taps,
     typedChars: path.typedChars,
     friction: path.friction.length,
+    decisionPoints: path.decisionPoints,
+    noReturn: path.noReturn,
   };
 }
 
@@ -31,6 +35,8 @@ export const SUMMARY_KEYS: readonly SummaryKey[] = [
   'taps',
   'typedChars',
   'friction',
+  'decisionPoints',
+  'noReturn',
 ];
 
 export interface Delta {

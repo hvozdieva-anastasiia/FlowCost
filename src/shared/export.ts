@@ -1,6 +1,6 @@
 // Text exports of an analysis for a document or a spreadsheet.
 
-import type { PathResult } from './analysis';
+import type { FlowStructure, PathResult } from './analysis';
 import type { Assumptions } from './cost';
 
 function seconds(value: number): string {
@@ -23,6 +23,7 @@ export interface ReportInput {
   readonly goalName: string;
   readonly path: PathResult;
   readonly assumptions: Assumptions;
+  readonly flow?: FlowStructure | null;
 }
 
 export function toMarkdown(input: ReportInput): string {
@@ -40,6 +41,14 @@ export function toMarkdown(input: ReportInput): string {
     `| Characters typed | ${path.typedChars} |`,
     `| Modelled time | ${seconds(path.seconds)} s |`,
     `| Friction points | ${path.friction.length} |`,
+    `| Decision points | ${path.decisionPoints} |`,
+    `| Steps with no way back | ${path.noReturn} |`,
+    ...(input.flow
+      ? [
+          `| Screens in play | ${input.flow.screens} |`,
+          `| Independent routes | ${input.flow.cyclomatic} |`,
+        ]
+      : []),
     '',
     '## Steps',
     '',
@@ -72,6 +81,9 @@ export function toMarkdown(input: ReportInput): string {
     assumptions.useFitts
       ? `Pointing by Fitts's law: ${assumptions.fittsA} + ${assumptions.fittsB} x log2(D/W + 1) s.`
       : `Pointing: ${assumptions.pointFixed} s fixed.`,
+    assumptions.useHick
+      ? `Choice among n options: ${assumptions.hickB} x log2(n) s (Hick's law).`
+      : 'Choice time is not added.',
     '',
     'The time is a model estimate for a person who knows the task, not a measurement of real users.',
     '',
