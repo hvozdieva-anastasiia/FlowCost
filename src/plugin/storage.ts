@@ -2,6 +2,7 @@
 // the document so teammates see the same comparison.
 
 import type { Snapshot } from '../shared/compare';
+import { NAMESPACE } from './extract';
 import {
   MAX_SNAPSHOTS,
   defaultSettings,
@@ -12,7 +13,8 @@ import {
 } from '../shared/messages';
 
 const SETTINGS_KEY = 'flowcost:settings';
-const SNAPSHOTS_KEY = 'flowcost:snapshots';
+/** Shared plugin data on the document; see NAMESPACE in extract.ts for why. */
+const SNAPSHOTS_KEY = 'snapshots';
 
 export async function loadSettings(): Promise<Settings> {
   try {
@@ -31,7 +33,7 @@ export function saveSettings(settings: Settings): void {
 }
 
 export function loadSnapshots(): Snapshot[] {
-  const text = figma.root.getPluginData(SNAPSHOTS_KEY);
+  const text = figma.root.getSharedPluginData(NAMESPACE, SNAPSHOTS_KEY);
   if (text === '') return [];
   try {
     const value: unknown = JSON.parse(text);
@@ -48,7 +50,11 @@ export function loadSnapshots(): Snapshot[] {
 }
 
 function writeSnapshots(snapshots: readonly Snapshot[]): void {
-  figma.root.setPluginData(SNAPSHOTS_KEY, JSON.stringify(snapshots));
+  figma.root.setSharedPluginData(
+    NAMESPACE,
+    SNAPSHOTS_KEY,
+    JSON.stringify(snapshots),
+  );
 }
 
 /** Newest first; the oldest fall off past the limit. */

@@ -9,7 +9,13 @@ import {
   type PluginMessage,
   type UiMessage,
 } from '../shared/messages';
-import { ENDING_KEY, INPUT_KEY, readGraph, screenOf } from './extract';
+import {
+  ENDING_KEY,
+  INPUT_KEY,
+  NAMESPACE,
+  readGraph,
+  screenOf,
+} from './extract';
 import {
   addSnapshot,
   loadSettings,
@@ -65,11 +71,14 @@ async function reveal(nodeId: string): Promise<void> {
 
 function markInput(mark: InputMark): number {
   const selection = figma.currentPage.selection;
+  const value =
+    mark.kind === 'input'
+      ? String(mark.chars)
+      : mark.kind === 'not-input'
+        ? '0'
+        : '';
   for (const node of selection) {
-    if (mark.kind === 'input')
-      node.setPluginData(INPUT_KEY, String(mark.chars));
-    else if (mark.kind === 'not-input') node.setPluginData(INPUT_KEY, '0');
-    else node.setPluginData(INPUT_KEY, '');
+    node.setSharedPluginData(NAMESPACE, INPUT_KEY, value);
   }
   return selection.length;
 }
@@ -79,7 +88,7 @@ function markEnding(value: boolean): number {
   for (const node of figma.currentPage.selection) {
     const screen = screenOf(node);
     if (!screen) continue;
-    screen.setPluginData(ENDING_KEY, value ? '1' : '');
+    screen.setSharedPluginData(NAMESPACE, ENDING_KEY, value ? '1' : '');
     count += 1;
   }
   return count;

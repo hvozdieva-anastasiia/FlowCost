@@ -12,10 +12,16 @@ import {
 } from '../shared/graph';
 import { parseReaction, type RawReaction } from '../shared/reactions';
 
-/** Plugin data on a node: a number of characters, or `0` for "not an input". */
-export const INPUT_KEY = 'flowcost:input';
-/** Plugin data on a screen: `1` when the person marked it as an ending. */
-export const ENDING_KEY = 'flowcost:ending';
+/**
+ * Marks and snapshots are kept as shared plugin data under this namespace.
+ * Private plugin data needs a plugin ID in the manifest, and a plugin that has
+ * not been published or registered yet has none.
+ */
+export const NAMESPACE = 'flowcost';
+/** On a node: a number of characters, or `0` for "not an input". */
+export const INPUT_KEY = 'input';
+/** On a screen: `1` when the person marked it as an ending. */
+export const ENDING_KEY = 'ending';
 
 type ScreenNode = FrameNode | ComponentNode | InstanceNode;
 
@@ -105,7 +111,7 @@ function looksLikeField(node: SceneNode): boolean {
 function detectFields(screen: ScreenNode): InputField[] {
   const matched = new Map<string, { node: SceneNode; chars: number }>();
   screen.findAll((node) => {
-    const mark = node.getPluginData(INPUT_KEY);
+    const mark = node.getSharedPluginData(NAMESPACE, INPUT_KEY);
     if (mark === '0') return false;
     const marked = Number(mark);
     if (mark !== '' && Number.isFinite(marked) && marked > 0) {
@@ -188,7 +194,7 @@ export async function readGraph(): Promise<FlowGraph> {
       height: node.height,
       contentHeight: contentHeight(node),
       scrolls,
-      ending: node.getPluginData(ENDING_KEY) === '1',
+      ending: node.getSharedPluginData(NAMESPACE, ENDING_KEY) === '1',
       fields: detectFields(node),
     });
 
