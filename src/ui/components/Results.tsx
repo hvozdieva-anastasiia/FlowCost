@@ -1,48 +1,17 @@
 import { useId } from 'react';
 import type { PathResult } from '../../shared/analysis';
 import { useFlow } from '../FlowProvider';
-import { FRICTION_LABELS, SUMMARY_LABELS, formatSeconds } from '../format';
+import {
+  FRICTION_LABELS,
+  OPERATOR_NAMES,
+  SUMMARY_LABELS,
+  audienceText,
+  formatSeconds,
+  headline,
+  plural,
+} from '../format';
 
-function Summary({ path }: { path: PathResult }) {
-  const items: [string, string][] = [
-    [SUMMARY_LABELS.actions, String(path.actions)],
-    [SUMMARY_LABELS.screens, String(path.screens)],
-    [SUMMARY_LABELS.seconds, formatSeconds(path.seconds)],
-    [SUMMARY_LABELS.taps, String(path.taps)],
-    [SUMMARY_LABELS.typedChars, String(path.typedChars)],
-    [SUMMARY_LABELS.friction, String(path.friction.length)],
-  ];
-  return (
-    <dl className="summary">
-      {items.map(([label, value]) => (
-        <div key={label} className="metric">
-          <dt>{label}</dt>
-          <dd>{value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function Structure({ path }: { path: PathResult }) {
-  const { analysis } = useFlow();
-  const flow = analysis?.flow ?? null;
-  const items: [string, string][] = [
-    [SUMMARY_LABELS.decisionPoints, String(path.decisionPoints)],
-    [SUMMARY_LABELS.noReturn, String(path.noReturn)],
-    [
-      'Longest way back',
-      path.longestReturn === 0 ? 'none' : `${path.longestReturn} actions`,
-    ],
-  ];
-  if (flow) {
-    items.push(
-      ['Screens in play', String(flow.screens)],
-      ['Links between them', String(flow.links)],
-      ['Screens with a fork', String(flow.decisionScreens)],
-      ['Independent routes', String(flow.cyclomatic)],
-    );
-  }
+function Facts({ items }: { items: readonly [string, string][] }) {
   return (
     <dl className="facts">
       {items.map(([label, value]) => (
@@ -55,7 +24,7 @@ function Structure({ path }: { path: PathResult }) {
   );
 }
 
-function PathChoice() {
+function RouteChoice() {
   const { state, dispatch, analysis } = useFlow();
   const id = useId();
   if (!analysis) return null;
@@ -64,7 +33,7 @@ function PathChoice() {
   return (
     <div className="field">
       <span id={id} className="label">
-        Path
+        Which route
       </span>
       <div className="segments" role="group" aria-labelledby={id}>
         <button
@@ -79,12 +48,12 @@ function PathChoice() {
           aria-pressed={choice.kind === 'fewest'}
           onClick={() => dispatch({ type: 'path', path: { kind: 'fewest' } })}
         >
-          Fewest steps
+          Fewest actions
         </button>
       </div>
       {alternatives.length > 1 && (
         <select
-          aria-label="Other paths"
+          aria-label="Other routes"
           value={choice.kind === 'alternative' ? String(choice.index) : ''}
           onChange={(event) => {
             const value = event.target.value;
@@ -97,17 +66,17 @@ function PathChoice() {
             });
           }}
         >
-          <option value="">Other paths ({alternatives.length})</option>
+          <option value="">Other routes ({alternatives.length})</option>
           {alternatives.map((path, index) => (
             <option key={index} value={index}>
-              {`#${index + 1}: ${formatSeconds(path.seconds)}, ${path.actions} actions`}
+              {`${formatSeconds(path.seconds)}, ${plural(path.actions, 'action', 'actions')}`}
             </option>
           ))}
         </select>
       )}
       {analysis.truncated && (
         <p className="hint">
-          The search stopped at its limit, so some paths are not listed.
+          The search stopped at its limit, so some routes are not listed.
         </p>
       )}
     </div>
@@ -117,7 +86,7 @@ function PathChoice() {
 function Steps({ path }: { path: PathResult }) {
   const { bridge } = useFlow();
   if (path.steps.length === 0) {
-    return <p className="hint">Start and goal are the same screen.</p>;
+    return <p className="hint">From and To are the same screen.</p>;
   }
   return (
     <ol className="steps">
@@ -127,13 +96,14 @@ function Steps({ path }: { path: PathResult }) {
             <summary>
               <span className="step-title">
                 {step.index}. {step.label}
-                {step.automatic ? ' (timer)' : ''}
+                {step.automatic ? ' (happens by itself)' : ''}
               </span>
               <span className="step-time">{formatSeconds(step.seconds)}</span>
             </summary>
             <p className="hint">
-              {step.screenName} to {step.toScreenName}
-              {step.conditional ? ' (conditional branch)' : ''}
+              On &quot;{step.screenName}&quot;, leads to &quot;
+              {step.toScreenName}&quot;
+              {step.conditional ? '. Only on one branch of a condition.' : '.'}
             </p>
             <table>
               <caption className="visually-hidden">
@@ -141,15 +111,15 @@ function Steps({ path }: { path: PathResult }) {
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">Op</th>
-                  <th scope="col">What</th>
+                  <th scope="col">Part</th>
+                  <th scope="col">What happens</th>
                   <th scope="col">Seconds</th>
                 </tr>
               </thead>
               <tbody>
                 {step.operators.map((operator, i) => (
                   <tr key={i}>
-                    <td>{operator.kind}</td>
+                    <td>{OPERATOR_NAMES[operator.kind]}</td>
                     <td>{operator.label}</td>
                     <td>{operator.seconds.toFixed(2)}</td>
                   </tr>
@@ -162,7 +132,7 @@ function Steps({ path }: { path: PathResult }) {
                 bridge.post({ type: 'REVEAL', nodeId: step.nodeId })
               }
             >
-              Show layer
+              Show on canvas
             </button>
           </details>
         </li>
@@ -171,18 +141,19 @@ function Steps({ path }: { path: PathResult }) {
   );
 }
 
-function Friction({ path }: { path: PathResult }) {
+function Problems({ path }: { path: PathResult }) {
   const { bridge } = useFlow();
   if (path.friction.length === 0) {
-    return <p className="hint">No friction points on this path.</p>;
+    return <p className="hint">Nothing slows this route down.</p>;
   }
   return (
     <ul className="issues">
       {path.friction.map((point, i) => (
         <li key={i}>
           <div>
-            <strong>{FRICTION_LABELS[point.kind]}</strong>, step {point.step}
-            <div className="hint">{point.message}</div>
+            <strong>{FRICTION_LABELS[point.kind]}</strong>
+            <span className="hint"> · step {point.step}</span>
+            <div>{point.message}</div>
           </div>
           <button
             type="button"
@@ -198,49 +169,156 @@ function Friction({ path }: { path: PathResult }) {
   );
 }
 
+function Shape({ path }: { path: PathResult }) {
+  const { analysis } = useFlow();
+  const flow = analysis?.flow ?? null;
+  const items: [string, string][] = [
+    [SUMMARY_LABELS.decisionPoints, String(path.decisionPoints)],
+    [SUMMARY_LABELS.noReturn, String(path.noReturn)],
+    [
+      'Longest way back',
+      path.longestReturn === 0
+        ? 'none'
+        : plural(path.longestReturn, 'action', 'actions'),
+    ],
+  ];
+  if (flow) {
+    items.push(
+      ['Screens between From and To', String(flow.screens)],
+      ['Connections between them', String(flow.links)],
+      ['Screens with a fork', String(flow.decisionScreens)],
+      ['Independent routes', String(flow.cyclomatic)],
+    );
+  }
+  return (
+    <details className="panel">
+      <summary>Shape of the flow</summary>
+      <p className="hint">
+        How tangled the prototype is between these two screens, not only along
+        this route.
+      </p>
+      <Facts items={items} />
+    </details>
+  );
+}
+
+/** Says what to do when there is nothing to show yet. */
+function EmptyState() {
+  const { state, dispatch } = useFlow();
+  const { graph, startId, goalId } = state;
+  if (!graph) {
+    return (
+      <p className="empty" role="status">
+        Reading the prototype…
+      </p>
+    );
+  }
+  if (graph.screens.length === 0) {
+    return (
+      <div className="empty">
+        <p>
+          <strong>No screens on this page.</strong>
+        </p>
+        <p>
+          Flow Cost works on top-level frames connected in the Prototype tab.
+          Open a page that has them.
+        </p>
+      </div>
+    );
+  }
+  if (!startId || !goalId) {
+    const startName = graph.screens.find((s) => s.id === startId)?.name;
+    return (
+      <div className="empty">
+        <p>
+          <strong>
+            {startName
+              ? 'Choose where the flow ends.'
+              : 'Choose where the flow starts and ends.'}
+          </strong>
+        </p>
+        <p>
+          {startName
+            ? `Flow Cost follows your prototype connections from "${startName}" and works out how long a person needs, and how many clicks, how much typing and how many choices it takes.`
+            : 'Flow Cost follows your prototype connections between the two screens and works out how long a person needs, and how many clicks, how much typing and how many choices it takes.'}
+        </p>
+        {!startId && (
+          <p className="hint">
+            This page has no flow start, so pick the From screen too.
+          </p>
+        )}
+      </div>
+    );
+  }
+  const name = (id: string) =>
+    graph.screens.find((s) => s.id === id)?.name ?? id;
+  return (
+    <div className="empty" role="status">
+      <p>
+        <strong>
+          No connection leads from &quot;{name(startId)}&quot; to &quot;
+          {name(goalId)}&quot;.
+        </strong>
+      </p>
+      <p>
+        The prototype has no path between them, so there is nothing to price.
+        The Check tab shows broken or missing connections.
+      </p>
+      <button
+        type="button"
+        onClick={() => dispatch({ type: 'tab', tab: 'check' })}
+      >
+        Open Check
+      </button>
+    </div>
+  );
+}
+
 export function Results() {
   const { state, analysis, chosen } = useFlow();
   const { graph, startId, goalId } = state;
 
-  if (!graph) return <p className="hint">Reading the page…</p>;
-  if (graph.screens.length === 0) {
+  if (!graph || !startId || !goalId || !analysis || !chosen) {
     return (
-      <p className="hint">
-        This page has no frames. Open a page with a prototype.
-      </p>
+      <section aria-labelledby="result-heading">
+        <h2 id="result-heading">Result</h2>
+        <EmptyState />
+      </section>
     );
   }
-  if (!startId || !goalId || !analysis) {
-    return (
-      <p className="hint">
-        Choose where the flow starts and where it ends to see what it costs.
-      </p>
-    );
-  }
-  if (!chosen) {
-    return (
-      <p role="status" className="empty">
-        There is no path from the start to the goal. Check the Health tab for
-        broken links and dead ends.
-      </p>
-    );
-  }
+
+  const name = (id: string) =>
+    graph.screens.find((s) => s.id === id)?.name ?? id;
+
   return (
-    <section aria-label="Result">
-      <Summary path={chosen} />
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Result</h2>
+      <p className="headline">{headline(chosen)}</p>
+      <p className="hint">
+        From {name(startId)} to {name(goalId)}, for{' '}
+        {audienceText(state.settings.assumptions)}.
+      </p>
       {chosen.assumed && (
         <p className="hint">
-          This path crosses a conditional branch. Variable values are not
-          simulated, so the branch is counted as possible.
+          This route crosses a condition. Variable values are not simulated, so
+          the branch is counted as possible.
         </p>
       )}
-      <PathChoice />
-      <h2>Steps</h2>
+      <Facts
+        items={[
+          [SUMMARY_LABELS.seconds, formatSeconds(chosen.seconds)],
+          [SUMMARY_LABELS.actions, String(chosen.actions)],
+          [SUMMARY_LABELS.screens, String(chosen.screens)],
+          [SUMMARY_LABELS.typedChars, String(chosen.typedChars)],
+          [SUMMARY_LABELS.friction, String(chosen.friction.length)],
+        ]}
+      />
+      <RouteChoice />
+      <h3>Steps</h3>
       <Steps path={chosen} />
-      <h2>Friction</h2>
-      <Friction path={chosen} />
-      <h2>Flow structure</h2>
-      <Structure path={chosen} />
+      <h3>Problems on this route</h3>
+      <Problems path={chosen} />
+      <Shape path={chosen} />
     </section>
   );
 }

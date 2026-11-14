@@ -2,12 +2,12 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { loadGraph, renderApp } from './harness';
 
-describe('export', () => {
+describe('sharing the result', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('copies a Markdown report', async () => {
+  it('copies a Markdown report and says so', async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.spyOn(navigator, 'clipboard', 'get').mockReturnValue({
@@ -15,11 +15,13 @@ describe('export', () => {
     } as unknown as Clipboard);
     const app = renderApp();
     loadGraph(app);
-    await user.selectOptions(screen.getByLabelText('Goal'), 'done');
-    await user.click(screen.getByRole('button', { name: 'Copy Markdown' }));
+    await user.selectOptions(screen.getByLabelText('To'), 'done');
+    await user.click(
+      screen.getByRole('button', { name: 'Copy report as Markdown' }),
+    );
     expect(writeText).toHaveBeenCalledTimes(1);
     expect(writeText.mock.calls[0]?.[0]).toContain('| Actions | 1 |');
-    expect(screen.getByText('Markdown copied')).toBeInTheDocument();
+    expect(screen.getByText('Report copied as Markdown.')).toBeInTheDocument();
   });
 
   it('shows the text when copying is refused', async () => {
@@ -33,9 +35,12 @@ describe('export', () => {
     });
     const app = renderApp();
     loadGraph(app);
-    await user.selectOptions(screen.getByLabelText('Goal'), 'done');
-    await user.click(screen.getByRole('button', { name: 'Copy CSV' }));
+    await user.selectOptions(screen.getByLabelText('To'), 'done');
+    await user.click(screen.getByRole('button', { name: 'Copy steps as CSV' }));
     const area = screen.getByLabelText<HTMLTextAreaElement>('Text to copy');
     expect(area.value).toContain('step,screen,action,operator,detail,seconds');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Copying is blocked here',
+    );
   });
 });

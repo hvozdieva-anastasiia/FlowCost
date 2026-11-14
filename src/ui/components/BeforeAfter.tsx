@@ -14,7 +14,8 @@ function newId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function CompareSection() {
+/** Saves today's numbers so the person can change the design and compare. */
+export function BeforeAfter() {
   const { state, dispatch, bridge, chosen } = useFlow();
   const labelId = useId();
   const pickId = useId();
@@ -32,9 +33,13 @@ export function CompareSection() {
 
   return (
     <details className="panel">
-      <summary>Compare with a snapshot</summary>
+      <summary>Compare before and after</summary>
+      <p className="hint">
+        Save this result, change your prototype, then compare. Saved results
+        live in this file.
+      </p>
       <div className="field">
-        <label htmlFor={labelId}>Snapshot name</label>
+        <label htmlFor={labelId}>Name for this result</label>
         <div className="row">
           <input
             id={labelId}
@@ -60,22 +65,24 @@ export function CompareSection() {
                   summary: summarize(chosen),
                 },
               });
+              dispatch({
+                type: 'notice',
+                notice: { level: 'info', text: 'Result saved in this file.' },
+              });
               setLabel('');
             }}
           >
-            Save snapshot
+            Save result
           </button>
         </div>
+        {!chosen && (
+          <p className="hint">Choose a route first, then save its result.</p>
+        )}
       </div>
 
-      {state.snapshots.length === 0 ? (
-        <p className="hint">
-          A snapshot keeps today&apos;s numbers in this file. Change the design,
-          then compare.
-        </p>
-      ) : (
+      {state.snapshots.length > 0 && (
         <div className="field">
-          <label htmlFor={pickId}>Compare with</label>
+          <label htmlFor={pickId}>Compare the current route with</label>
           <div className="row">
             <select
               id={pickId}
@@ -84,7 +91,7 @@ export function CompareSection() {
                 dispatch({ type: 'compare', id: event.target.value || null })
               }
             >
-              <option value="">Choose a snapshot</option>
+              <option value="">Choose a saved result</option>
               {state.snapshots.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.label} ({formatSeconds(item.summary.seconds)})
@@ -106,7 +113,7 @@ export function CompareSection() {
 
       {saved && chosen && (
         <table>
-          <caption>{saved.label} compared with the current path</caption>
+          <caption>{saved.label}, compared with the current route</caption>
           <thead>
             <tr>
               <th scope="col">Metric</th>

@@ -47,7 +47,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font:
-    12px/1.45 Inter,
+    12px/1.5 Inter,
     system-ui,
     -apple-system,
     'Segoe UI',
@@ -56,7 +56,7 @@ body {
 }
 
 main {
-  padding: 0 12px 16px;
+  padding: 0 12px 80px;
 }
 
 button,
@@ -72,6 +72,10 @@ textarea {
   outline-offset: 1px;
 }
 
+::selection {
+  background: color-mix(in srgb, var(--brand) 35%, transparent);
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -82,12 +86,19 @@ textarea {
 }
 
 h2 {
-  margin: 16px 0 6px;
-  font-size: 11px;
+  margin: 20px 0 6px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+}
+
+h3 {
+  margin: 16px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+p {
+  margin: 0 0 6px;
 }
 
 button {
@@ -104,7 +115,7 @@ button:hover:not(:disabled) {
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: default;
 }
 
@@ -119,20 +130,24 @@ textarea {
   border-radius: var(--radius);
 }
 
-input[type='checkbox'] {
+input[type='checkbox'],
+input[type='radio'] {
   width: auto;
   min-height: 0;
 }
 
 textarea {
+  margin-top: 6px;
   font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: 11px;
 }
 
+/* Header: where I am, and how to read the prototype again. */
+
 .top {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -149,6 +164,7 @@ textarea {
 
 [role='tab'] {
   border-color: transparent;
+  background: transparent;
 }
 
 [role='tab'][aria-selected='true'] {
@@ -157,10 +173,51 @@ textarea {
   font-weight: 600;
 }
 
+.refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  border-color: transparent;
+  background: transparent;
+}
+
+.refresh[data-busy='true'] .icon {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.icon {
+  flex: none;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.status {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+}
+
+/* Form pieces. */
+
 .field {
   display: grid;
   gap: 4px;
-  margin: 10px 0;
+  margin: 8px 0;
 }
 
 .field.compact {
@@ -170,6 +227,29 @@ textarea {
 .field > label,
 .label {
   color: var(--text-secondary);
+}
+
+.route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: var(--gap);
+}
+
+.route .field {
+  margin: 0;
+}
+
+.selection-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
 }
 
 .row {
@@ -183,15 +263,15 @@ textarea {
   margin: 6px 0;
 }
 
-.row > button {
-  flex: none;
-  white-space: nowrap;
-}
-
 .row > select,
 .row > input {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.row > button {
+  flex: none;
+  white-space: nowrap;
 }
 
 .unit {
@@ -201,25 +281,92 @@ textarea {
 
 .check {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   margin: 8px 0;
 }
 
+.check input {
+  margin-top: 3px;
+}
+
 .hint {
-  margin: 6px 0;
   color: var(--text-secondary);
 }
 
 .empty {
-  margin: 16px 0;
+  margin: 8px 0;
   padding: 10px;
   background: var(--bg-secondary);
   border-radius: var(--radius);
 }
 
+.empty p:last-child {
+  margin-bottom: 0;
+}
+
+.empty button {
+  margin-top: 6px;
+}
+
+/* One choice out of a few. The radio is real; the label is drawn as a button. */
+
+.segmented {
+  margin: 8px 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.segmented legend {
+  padding: 0;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}
+
+.segments {
+  display: flex;
+  gap: 4px;
+}
+
+.segmented label {
+  position: relative;
+}
+
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.segmented span,
+.segments > button {
+  display: inline-block;
+  min-height: 28px;
+  padding: 4px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.segmented input:checked + span,
+.segments > button[aria-pressed='true'] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+}
+
+.segmented input:focus-visible + span {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+/* Disclosure panels. */
+
 .panel {
-  margin: 10px 0;
+  margin: 12px 0;
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
@@ -249,32 +396,16 @@ textarea {
   column-gap: var(--gap);
 }
 
-.summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--gap);
-  margin: 12px 0;
-}
+/* The result. */
 
-.metric {
-  padding: 8px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius);
-}
-
-.metric dt {
-  color: var(--text-secondary);
-}
-
-.metric dd {
-  margin: 2px 0 0;
-  font-size: 18px;
+.headline {
+  margin: 0 0 2px;
+  font-size: 15px;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 .facts {
-  margin: 0;
+  margin: 8px 0;
 }
 
 .facts > div {
@@ -292,17 +423,6 @@ textarea {
 .facts dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
-}
-
-.segments {
-  display: flex;
-  gap: 4px;
-}
-
-.segments button[aria-pressed='true'] {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: var(--on-brand);
 }
 
 .steps {
@@ -384,19 +504,29 @@ td:last-child {
   color: var(--warning);
 }
 
-.banner {
+/* A message about what just happened: at the bottom, closable, self-clearing. */
+
+.toast {
+  position: fixed;
+  inset: auto 12px 12px;
+  z-index: 3;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--gap);
-  margin: 8px 0;
-  padding: 6px 10px;
+  padding: 8px 8px 8px 12px;
   background: var(--bg-secondary);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 
-.banner.error {
-  color: var(--danger);
+.toast.error {
+  border-color: var(--danger);
+}
+
+.toast .icon-button {
+  min-height: 20px;
+  width: 20px;
 }
 
 @media (prefers-reduced-motion: reduce) {

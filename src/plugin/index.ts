@@ -38,7 +38,11 @@ function postSelection(): void {
     const screen = screenOf(node);
     if (screen) ids.add(screen.id);
   }
-  post({ type: 'SELECTION', screenIds: [...ids] });
+  post({
+    type: 'SELECTION',
+    screenIds: [...ids],
+    count: figma.currentPage.selection.length,
+  });
 }
 
 async function scan(): Promise<void> {
@@ -83,15 +87,20 @@ function markInput(mark: InputMark): number {
   return selection.length;
 }
 
-function markEnding(value: boolean): number {
-  let count = 0;
-  for (const node of figma.currentPage.selection) {
+/** Marks the screens behind `nodes`; returns their names. */
+function markEnding(nodes: readonly BaseNode[], value: boolean): string[] {
+  const names = new Map<string, string>();
+  for (const node of nodes) {
     const screen = screenOf(node);
-    if (!screen) continue;
+    if (!screen || names.has(screen.id)) continue;
     screen.setSharedPluginData(NAMESPACE, ENDING_KEY, value ? '1' : '');
-    count += 1;
+    names.set(screen.id, screen.name);
   }
-  return count;
+  return [...names.values()];
+}
+
+function plural(count: number, one: string, many: string): string {
+  return `${count} ${count === 1 ? one : many}`;
 }
 
 async function handle(message: UiMessage): Promise<void> {
@@ -115,18 +124,45 @@ async function handle(message: UiMessage): Promise<void> {
     case 'MARK_INPUT': {
       const count = markInput(message.mark);
       if (count === 0) {
-        notice('error', 'Select the field layers first.');
+        notice(
+          'error',
+          'Nothing is selected. Select the field layers on the canvas first.',
+        );
         return;
       }
+      const what = plural(count, 'layer', 'layers');
+      notice(
+        'info',
+        message.mark.kind === 'input'
+          ? `Marked ${what} as input fields.`
+          : message.mark.kind === 'not-input'
+            ? `Marked ${what} as not input fields.`
+            : `Cleared the marks on ${what}.`,
+      );
       await scan();
       return;
     }
     case 'MARK_ENDING': {
-      const count = markEnding(message.value);
-      if (count === 0) {
-        notice('error', 'Select a screen, or a layer inside it, first.');
+      let nodes: readonly BaseNode[] = figma.currentPage.selection;
+      if (message.screenId !== undefined) {
+        const node = await figma.getNodeByIdAsync(message.screenId);
+        nodes = node ? [node] : [];
+      }
+      const names = markEnding(nodes, message.value);
+      if (names.length === 0) {
+        notice(
+          'error',
+          'No screen to mark. Select a screen, or a layer inside it, on the canvas first.',
+        );
         return;
       }
+      const list = names.map((name) => `"${name}"`).join(', ');
+      notice(
+        'info',
+        message.value
+          ? `${list} is now marked as an end of the flow.`
+          : `Removed the end-of-flow mark from ${list}.`,
+      );
       await scan();
       return;
     }
@@ -156,5 +192,29 @@ figma.ui.onmessage = (raw: unknown) => {
   });
 };
 
+// Tell the window when the page is edited, so it can read the prototype again
+// by itself. Edits come in bursts (a drag, a paste), so wait until they pause.
+const EDIT_PAUSE_MS = 500;
+let editTimer: ReturnType<typeof setTimeout> | undefined;
+let watched: PageNode | null = null;
+
+function onNodeChange(): void {
+  if (editTimer !== undefined) clearTimeout(editTimer);
+  editTimer = setTimeout(() => post({ type: 'PAGE_EDITED' }), EDIT_PAUSE_MS);
+}
+
+async function watchCurrentPage(): Promise<void> {
+  const page = figma.currentPage;
+  await page.loadAsync();
+  if (watched) watched.off('nodechange', onNodeChange);
+  watched = page;
+  page.on('nodechange', onNodeChange);
+}
+
 figma.on('selectionchange', postSelection);
-figma.on('currentpagechange', () => post({ type: 'PAGE_CHANGED' }));
+figma.on('currentpagechange', () => {
+  post({ type: 'PAGE_CHANGED' });
+  postSelection();
+  void watchCurrentPage();
+});
+void watchCurrentPage();

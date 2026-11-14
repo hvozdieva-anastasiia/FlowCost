@@ -1,45 +1,26 @@
-import { AssumptionsPanel } from './components/Assumptions';
-import { CompareSection } from './components/Compare';
+import { Audience } from './components/Audience';
+import { BeforeAfter } from './components/BeforeAfter';
+import { Check, useProblemCount } from './components/Check';
 import { ExportButtons } from './components/ExportButtons';
-import { Health, useHealth } from './components/Health';
-import { Marks } from './components/Marks';
+import { RefreshIcon } from './components/Icons';
 import { Results } from './components/Results';
-import { ScreenPicker } from './components/ScreenPicker';
+import { RoutePicker } from './components/RoutePicker';
+import { Teach } from './components/Teach';
+import { Toast } from './components/Toast';
 import { useFlow } from './FlowProvider';
+import { plural } from './format';
 import type { Tab } from './state';
 
-function Banners() {
-  const { state, dispatch, bridge } = useFlow();
-  return (
-    <>
-      {state.stale && (
-        <div className="banner" role="status">
-          <span>The page changed.</span>
-          <button type="button" onClick={() => bridge.post({ type: 'SCAN' })}>
-            Read it again
-          </button>
-        </div>
-      )}
-      {state.notice && (
-        <div
-          className={`banner ${state.notice.level}`}
-          role={state.notice.level === 'error' ? 'alert' : 'status'}
-        >
-          <span>{state.notice.text}</span>
-          <button type="button" onClick={() => dispatch({ type: 'dismiss' })}>
-            Dismiss
-          </button>
-        </div>
-      )}
-    </>
-  );
+function formatClock(at: number): string {
+  return new Date(at).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
-function Tabs() {
-  const { state, dispatch, bridge } = useFlow();
-  const problems = useHealth().filter(
-    (issue) => issue.severity !== 'info',
-  ).length;
+function Header() {
+  const { state, dispatch, refresh } = useFlow();
+  const problems = useProblemCount();
   const tab = (id: Tab, label: string) => (
     <button
       type="button"
@@ -55,13 +36,36 @@ function Tabs() {
   return (
     <header className="top">
       <div role="tablist" aria-label="Views">
-        {tab('analyze', 'Analyze')}
-        {tab('health', problems > 0 ? `Health (${problems})` : 'Health')}
+        {tab('cost', 'Flow cost')}
+        {tab('check', problems > 0 ? `Check (${problems})` : 'Check')}
       </div>
-      <button type="button" onClick={() => bridge.post({ type: 'SCAN' })}>
-        Read page
+      <button
+        type="button"
+        className="refresh"
+        data-busy={state.scanning}
+        title="Read the prototype from the canvas again. This also happens by itself when you edit the page."
+        onClick={refresh}
+      >
+        <RefreshIcon />
+        {state.scanning ? 'Reading…' : 'Refresh'}
       </button>
     </header>
+  );
+}
+
+/** Where the numbers come from, and how fresh they are. */
+function StatusLine() {
+  const { state } = useFlow();
+  const { graph, lastReadAt, scanning } = state;
+  if (!graph) return <p className="status">Reading the prototype…</p>;
+  return (
+    <p className="status" aria-live="polite">
+      {graph.pageName} · {plural(graph.screens.length, 'screen', 'screens')} ·{' '}
+      {plural(graph.links.length, 'connection', 'connections')}
+      {lastReadAt !== null &&
+        !scanning &&
+        ` · updated ${formatClock(lastReadAt)}`}
+    </p>
   );
 }
 
@@ -69,22 +73,23 @@ export function App() {
   const { state } = useFlow();
   return (
     <main>
-      <Tabs />
-      <Banners />
-      {state.tab === 'analyze' ? (
-        <div role="tabpanel" id="panel-analyze" aria-labelledby="tab-analyze">
-          <ScreenPicker />
-          <AssumptionsPanel />
+      <Header />
+      <StatusLine />
+      {state.tab === 'cost' ? (
+        <div role="tabpanel" id="panel-cost" aria-labelledby="tab-cost">
+          <RoutePicker />
+          <Audience />
           <Results />
           <ExportButtons />
-          <CompareSection />
-          <Marks />
+          <BeforeAfter />
+          <Teach />
         </div>
       ) : (
-        <div role="tabpanel" id="panel-health" aria-labelledby="tab-health">
-          <Health />
+        <div role="tabpanel" id="panel-check" aria-labelledby="tab-check">
+          <Check />
         </div>
       )}
+      <Toast />
     </main>
   );
 }

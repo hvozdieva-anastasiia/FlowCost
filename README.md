@@ -2,7 +2,7 @@
 
 Плагин Figma: оценка «стоимости» пользовательского сценария по готовому прототипу. Шаги, модельное время (KLM и закон Фиттса), точки трения, сравнение двух версий сценария. Всё считается локально, без сети и ИИ.
 
-Статус: версия 0.1 реализована и проходит автоматические проверки; в Figma Desktop ещё не проверялась ([docs/manual-checks.md](docs/manual-checks.md)). Спецификация: [docs/spec-0.1.md](docs/spec-0.1.md). Исследование и каталог возможностей: [docs/research/flow-cost-idea.md](docs/research/flow-cost-idea.md), [docs/research/flow-cost-features.md](docs/research/flow-cost-features.md).
+Статус: версия 0.1 реализована и проходит автоматические проверки; в Figma Desktop ещё не проверялась ([docs/manual-checks.md](docs/manual-checks.md)). Как пользоваться: [docs/user-guide.md](docs/user-guide.md). Разбор интерфейса: [docs/ux-review.md](docs/ux-review.md). Спецификация: [docs/spec-0.1.md](docs/spec-0.1.md). Исследование и каталог возможностей: [docs/research/flow-cost-idea.md](docs/research/flow-cost-idea.md), [docs/research/flow-cost-features.md](docs/research/flow-cost-features.md).
 
 ## Запуск
 

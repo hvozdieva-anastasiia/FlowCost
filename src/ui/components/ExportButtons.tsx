@@ -3,9 +3,9 @@ import { toCsv, toMarkdown } from '../../shared/export';
 import { copyText } from '../clipboard';
 import { useFlow } from '../FlowProvider';
 
+/** Copies the result as text for a document or a spreadsheet. */
 export function ExportButtons() {
-  const { state, chosen, analysis } = useFlow();
-  const [status, setStatus] = useState('');
+  const { state, dispatch, chosen, analysis } = useFlow();
   const [fallback, setFallback] = useState('');
 
   if (!chosen) return null;
@@ -27,26 +27,34 @@ export function ExportButtons() {
         : toCsv(chosen);
     const done = await copyText(text);
     setFallback(done ? '' : text);
-    setStatus(
-      done
-        ? `${kind === 'markdown' ? 'Markdown' : 'CSV'} copied`
-        : 'Copying is blocked here. Select the text below and copy it.',
-    );
+    dispatch({
+      type: 'notice',
+      notice: done
+        ? {
+            level: 'info',
+            text:
+              kind === 'markdown'
+                ? 'Report copied as Markdown.'
+                : 'Steps copied as CSV.',
+          }
+        : {
+            level: 'error',
+            text: 'Copying is blocked here. Select the text below and copy it yourself.',
+          },
+    });
   };
 
   return (
-    <section aria-label="Export">
+    <section aria-labelledby="share-heading">
+      <h3 id="share-heading">Share</h3>
       <div className="row wrap">
         <button type="button" onClick={() => void copy('markdown')}>
-          Copy Markdown
+          Copy report as Markdown
         </button>
         <button type="button" onClick={() => void copy('csv')}>
-          Copy CSV
+          Copy steps as CSV
         </button>
       </div>
-      <p role="status" className="hint">
-        {status}
-      </p>
       {fallback && (
         <textarea
           readOnly

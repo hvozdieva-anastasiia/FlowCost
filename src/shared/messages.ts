@@ -23,7 +23,15 @@ export type UiMessage =
   | { readonly type: 'SCAN' }
   | { readonly type: 'REVEAL'; readonly nodeId: string }
   | { readonly type: 'MARK_INPUT'; readonly mark: InputMark }
-  | { readonly type: 'MARK_ENDING'; readonly value: boolean }
+  /**
+   * Marks a screen as an intended end of a flow, or clears the mark. Without
+   * `screenId` it applies to the screens of the current selection.
+   */
+  | {
+      readonly type: 'MARK_ENDING';
+      readonly value: boolean;
+      readonly screenId?: string;
+    }
   | { readonly type: 'SNAPSHOT_SAVE'; readonly snapshot: Snapshot }
   | { readonly type: 'SNAPSHOT_DELETE'; readonly id: string }
   | { readonly type: 'SETTINGS_SAVE'; readonly settings: Settings };
@@ -35,9 +43,18 @@ export type PluginMessage =
       readonly snapshots: readonly Snapshot[];
     }
   | { readonly type: 'SCAN_RESULT'; readonly graph: FlowGraph }
-  | { readonly type: 'SELECTION'; readonly screenIds: readonly string[] }
+  | {
+      readonly type: 'SELECTION';
+      /** The screens that hold the selected layers. */
+      readonly screenIds: readonly string[];
+      /** How many layers are selected, screens or not. */
+      readonly count: number;
+    }
   | { readonly type: 'SNAPSHOTS'; readonly snapshots: readonly Snapshot[] }
+  /** The person switched to another page. */
   | { readonly type: 'PAGE_CHANGED' }
+  /** Something on the page changed; the prototype may have too. */
+  | { readonly type: 'PAGE_EDITED' }
   | {
       readonly type: 'NOTICE';
       readonly level: 'info' | 'error';
@@ -80,9 +97,10 @@ export function parseUiMessage(raw: unknown): UiMessage | null {
         : null;
     }
     case 'MARK_ENDING':
-      return typeof raw.value === 'boolean'
-        ? { type: 'MARK_ENDING', value: raw.value }
-        : null;
+      if (typeof raw.value !== 'boolean') return null;
+      return typeof raw.screenId === 'string'
+        ? { type: 'MARK_ENDING', value: raw.value, screenId: raw.screenId }
+        : { type: 'MARK_ENDING', value: raw.value };
     case 'SNAPSHOT_SAVE': {
       const snapshot = parseSnapshot(raw.snapshot);
       return snapshot ? { type: 'SNAPSHOT_SAVE', snapshot } : null;

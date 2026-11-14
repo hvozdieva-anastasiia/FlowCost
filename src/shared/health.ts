@@ -1,5 +1,6 @@
 // Structural checks of the prototype graph. They report facts about links and
-// screens; an ending the person marked is never reported as a dead end.
+// screens, not about the design. An ending the person marked is never reported
+// as a dead end.
 
 import { indexGraph, movesToScreen, type FlowGraph } from './graph';
 
@@ -11,9 +12,14 @@ export type Severity = 'error' | 'warning' | 'info';
 export interface HealthIssue {
   readonly kind: HealthKind;
   readonly severity: Severity;
-  readonly message: string;
+  /** What was found, in a few words. */
+  readonly title: string;
+  /** Why it matters and what to do about it. */
+  readonly hint: string;
   /** The node to reveal on the canvas. */
   readonly nodeId: string | null;
+  /** The screen can be marked as an intended end of a flow. */
+  readonly canMarkEnding: boolean;
 }
 
 export function checkHealth(graph: FlowGraph): HealthIssue[] {
@@ -24,9 +30,10 @@ export function checkHealth(graph: FlowGraph): HealthIssue[] {
     issues.push({
       kind: 'no-start',
       severity: 'info',
-      message:
-        'This page has no flow starting point. Pick the start screen by hand.',
+      title: 'No flow start on this page',
+      hint: 'A flow start tells Figma where people enter the prototype. Add one in the Prototype tab, or choose the From screen yourself.',
       nodeId: null,
+      canMarkEnding: false,
     });
   }
 
@@ -35,13 +42,15 @@ export function checkHealth(graph: FlowGraph): HealthIssue[] {
     if (link.broken !== null || missing) {
       const reason =
         link.broken === 'off-page'
-          ? 'points to another page'
-          : 'points to a screen that no longer exists';
+          ? 'It points to a screen on another page.'
+          : 'The screen it pointed to no longer exists.';
       issues.push({
         kind: 'broken-link',
         severity: 'error',
-        message: `"${link.sourceName}" on "${screenName(index.screens, link.screenId)}" ${reason}`,
+        title: `"${link.sourceName}" leads nowhere`,
+        hint: `${reason} It sits on "${screenName(index.screens, link.screenId)}". Reconnect it in the Prototype tab.`,
         nodeId: link.sourceId,
+        canMarkEnding: false,
       });
     }
   }
@@ -70,8 +79,10 @@ export function checkHealth(graph: FlowGraph): HealthIssue[] {
         issues.push({
           kind: 'unreachable',
           severity: 'warning',
-          message: `"${screen.name}" cannot be reached from any flow start`,
+          title: `"${screen.name}" can't be reached`,
+          hint: 'Nothing leads here from the flow start. Fine for a spare screen.',
           nodeId: screen.id,
+          canMarkEnding: false,
         });
       }
     }
@@ -92,15 +103,19 @@ export function checkHealth(graph: FlowGraph): HealthIssue[] {
       issues.push({
         kind: 'overlay-no-exit',
         severity: 'warning',
-        message: `Overlay "${screen.name}" has no way to close or continue`,
+        title: `Overlay "${screen.name}" can't be closed`,
+        hint: 'Nothing on it closes it or moves on, so people would be stuck. Add a close action.',
         nodeId: screen.id,
+        canMarkEnding: false,
       });
     } else if (graph.starts.length === 0 || reachable.has(screen.id)) {
       issues.push({
         kind: 'dead-end',
         severity: 'info',
-        message: `"${screen.name}" has no way out. Mark it as an ending if that is intended.`,
+        title: `"${screen.name}" has no way out`,
+        hint: 'Anyone who arrives here is stuck. If this is where the flow is meant to end, mark it as an end.',
         nodeId: screen.id,
+        canMarkEnding: true,
       });
     }
   }

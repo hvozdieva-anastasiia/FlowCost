@@ -18,6 +18,7 @@ const PLUGIN_MESSAGE_TYPES: ReadonlySet<string> = new Set([
   'SELECTION',
   'SNAPSHOTS',
   'PAGE_CHANGED',
+  'PAGE_EDITED',
   'NOTICE',
 ]);
 
